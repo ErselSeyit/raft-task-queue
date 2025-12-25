@@ -149,5 +149,13 @@ impl TaskQueue {
         
         stats
     }
+    
+    pub async fn clear_all(&self) {
+        let mut tasks_guard = self.tasks.write().await;
+        let mut pending_guard = self.pending_tasks.write().await;
+        tasks_guard.clear();
+        pending_guard.clear();
+        info!("Cleared all tasks from queue");
+    }
 }
 
