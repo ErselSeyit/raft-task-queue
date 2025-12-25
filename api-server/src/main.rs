@@ -64,15 +64,16 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let app = Router::new()
-        .route("/api/tasks", post(create_task).get(list_tasks))
+        .route("/api/tasks/clear", delete(clear_all_tasks))
         .route("/api/tasks/:id", get(get_task).delete(cancel_task))
+        .route("/api/tasks", post(create_task).get(list_tasks))
         .route("/api/stats", get(get_stats))
         .route("/health", get(health_check))
         .layer(CorsLayer::permissive()) // TODO: Configure specific origins for production
         .with_state(app_state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
-    info!("API server listening on http://0.0.0.0:3000");
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await?;
+    info!("API server listening on http://0.0.0.0:3001");
     
     axum::serve(listener, app).await?;
     Ok(())
@@ -179,5 +180,12 @@ async fn get_stats(
         stats,
         total_tasks,
     })
+}
+
+async fn clear_all_tasks(
+    State(state): State<AppState>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    state.queue.clear_all().await;
+    Ok(Json(serde_json::json!({ "message": "All tasks cleared" })))
 }
 
