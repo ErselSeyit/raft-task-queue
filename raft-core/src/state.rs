@@ -1,6 +1,4 @@
-use crate::error::RaftError;
 use shared::types::{NodeId, Term, Index, LogEntry};
-use shared::messages::{VoteRequest, VoteResponse, AppendEntriesRequest, AppendEntriesResponse};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
