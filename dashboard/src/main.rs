@@ -24,8 +24,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/proxy/tasks", get(proxy_tasks))
         .route("/api/proxy/stats", get(proxy_stats));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await?;
-    println!("Dashboard listening on http://0.0.0.0:8080");
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8081").await?;
+    println!("Dashboard listening on http://0.0.0.0:8081");
     
     axum::serve(listener, app).await?;
     Ok(())
@@ -37,7 +37,7 @@ async fn dashboard() -> Html<&'static str> {
 
 async fn proxy_tasks(Query(params): Query<HashMap<String, String>>) -> impl IntoResponse {
     let client = reqwest::Client::new();
-    let mut url = "http://localhost:3000/api/tasks".to_string();
+    let mut url = "http://localhost:3001/api/tasks".to_string();
     
     if let Some(status) = params.get("status") {
         url.push_str(&format!("?status={}", status));
@@ -57,7 +57,7 @@ async fn proxy_tasks(Query(params): Query<HashMap<String, String>>) -> impl Into
 async fn proxy_stats() -> impl IntoResponse {
     let client = reqwest::Client::new();
     
-    match client.get("http://localhost:3000/api/stats").send().await {
+    match client.get("http://localhost:3001/api/stats").send().await {
         Ok(response) => {
             match response.json::<serde_json::Value>().await {
                 Ok(json) => axum::Json(json).into_response(),

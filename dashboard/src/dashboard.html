@@ -229,9 +229,37 @@
             padding: 40px;
             color: #666;
         }
+        
+        .status-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            font-size: 0.85em;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .status-indicator.connected {
+            color: #4caf50;
+        }
+        
+        .status-indicator.disconnected {
+            color: #f44336;
+        }
+        
+        .refresh-info {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            font-size: 0.85em;
+        }
     </style>
 </head>
 <body>
+    <div class="status-indicator connected" id="statusIndicator">● Connected</div>
     <div class="container">
         <div class="header">
             <h1>🚀 Distributed Task Queue</h1>
@@ -294,6 +322,7 @@
             <div id="tasksContent">
                 <div class="loading">Loading tasks...</div>
             </div>
+            <div class="refresh-info">Auto-refreshing every second • Real-time monitoring active</div>
         </div>
     </div>
     
@@ -360,7 +389,7 @@
             const maxRetries = parseInt(document.getElementById('maxRetries').value);
             
             try {
-                const response = await fetch('http://localhost:3000/api/tasks', {
+                const response = await fetch('http://localhost:3001/api/tasks', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -398,11 +427,39 @@
         loadStats();
         loadTasks();
         
-        // Auto-refresh
-        setInterval(() => {
+        // Auto-refresh with visual indicator
+        let refreshInterval = setInterval(() => {
             loadStats();
             loadTasks(currentFilter);
-        }, 2000);
+        }, 1000); // Refresh every second for real-time monitoring
+        
+        // Add refresh indicator
+        const header = document.querySelector('.header h1');
+        if (header) {
+            let dotCount = 0;
+            setInterval(() => {
+                dotCount = (dotCount + 1) % 4;
+                const dots = '.'.repeat(dotCount);
+                header.textContent = `🚀 Distributed Task Queue${dots}`;
+            }, 500);
+        }
+        
+        // Show connection status
+        function updateConnectionStatus() {
+            fetch('/api/proxy/stats')
+                .then(() => {
+                    const indicator = document.getElementById('statusIndicator');
+                    indicator.textContent = '● Connected';
+                    indicator.className = 'status-indicator connected';
+                })
+                .catch(() => {
+                    const indicator = document.getElementById('statusIndicator');
+                    indicator.textContent = '● Disconnected';
+                    indicator.className = 'status-indicator disconnected';
+                });
+        }
+        setInterval(updateConnectionStatus, 2000);
+        updateConnectionStatus();
     </script>
 </body>
 </html>
